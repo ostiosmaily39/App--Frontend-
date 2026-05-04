@@ -1,6 +1,19 @@
 const jsonServer = require('json-server')
+const fs = require('fs')
+const path = require('path')
+
+const dbPath = path.join(__dirname, 'db.json')
+
+// Si el archivo no existe o está corrupto, lo recreamos
+try {
+  const content = fs.readFileSync(dbPath, 'utf8').trim().replace(/^\uFEFF/, '')
+  JSON.parse(content)
+} catch (e) {
+  fs.writeFileSync(dbPath, '{"users":[]}', 'utf8')
+}
+
 const server = jsonServer.create()
-const router = jsonServer.router('db.json')
+const router = jsonServer.router(dbPath)
 const middlewares = jsonServer.defaults()
 
 server.use((req, res, next) => {
