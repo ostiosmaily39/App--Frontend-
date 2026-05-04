@@ -1,26 +1,37 @@
-const jsonServer = require('json-server')
-const fs = require('fs')
-const path = require('path')
+const express = require('express')
+const app = express()
 
-const dbPath = path.join(__dirname, 'db.json')
-fs.writeFileSync(dbPath, '{"users":[]}', 'utf8')
+let users = []
+let nextId = 1
 
-const server = jsonServer.create()
-const middlewares = jsonServer.defaults()
-
-server.use((req, res, next) => {
+app.use(express.json())
+app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*')
   res.header('Access-Control-Allow-Methods', '*')
   res.header('Access-Control-Allow-Headers', '*')
+  if (req.method === 'OPTIONS') return res.sendStatus(200)
   next()
 })
 
-server.use(middlewares)
+app.get('/users', (req, res) => res.json(users))
+
+app.post('/users', (req, res) => {
+  const user = { id: nextId++, ...req.body }
+  users.push(user)
+  res.status(201).json(user)
+})
+
+app.put('/users/:id', (req, res) => {
+  const index = users.findIndex(u => u.id === Number(req.params.id))
+  if (index === -1) return res.status(404).json({ message: 'Not found' })
+  users[index] = { ...users[index], ...req.body }
+  res.json(users[index])
+})
+
+app.delete('/users/:id', (req, res) => {
+  users = users.filter(u => u.id !== Number(req.params.id))
+  res.json({})
+})
 
 const PORT = process.env.PORT || 3001
-server.listen(PORT, () => {
-  console.log(`JSON Server corriendo en puerto ${PORT}`)
-  // Inicializar el router DESPUÉS de que el servidor esté corriendo
-  const router = jsonServer.router(dbPath)
-  server.use(router)
-})
+app.listen(PORT, () => console.log(`API corriendo en puerto ${PORT}`))
