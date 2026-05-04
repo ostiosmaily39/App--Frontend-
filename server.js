@@ -3,12 +3,9 @@ const fs = require('fs')
 const path = require('path')
 
 const dbPath = path.join(__dirname, 'db.json')
-
-// Siempre recrear el archivo sin BOM
-fs.writeFileSync(dbPath, JSON.stringify({ users: [] }), { encoding: 'utf8' })
+fs.writeFileSync(dbPath, '{"users":[]}', 'utf8')
 
 const server = jsonServer.create()
-const router = jsonServer.router(dbPath)
 const middlewares = jsonServer.defaults()
 
 server.use((req, res, next) => {
@@ -19,9 +16,11 @@ server.use((req, res, next) => {
 })
 
 server.use(middlewares)
-server.use(router)
 
 const PORT = process.env.PORT || 3001
 server.listen(PORT, () => {
   console.log(`JSON Server corriendo en puerto ${PORT}`)
+  // Inicializar el router DESPUÉS de que el servidor esté corriendo
+  const router = jsonServer.router(dbPath)
+  server.use(router)
 })
