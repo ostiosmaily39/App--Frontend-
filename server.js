@@ -1,21 +1,15 @@
 const express = require('express')
+const cors = require('cors')
 const fs = require('fs')
 const app = express()
 
 const DB = './db.json'
 let users = fs.existsSync(DB) ? JSON.parse(fs.readFileSync(DB)) : []
 let nextId = users.length ? Math.max(...users.map(u => u.id)) + 1 : 1
-
 const save = () => fs.writeFileSync(DB, JSON.stringify(users))
 
+app.use(cors())
 app.use(express.json())
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*')
-  res.header('Access-Control-Allow-Methods', '*')
-  res.header('Access-Control-Allow-Headers', '*')
-  if (req.method === 'OPTIONS') return res.sendStatus(200)
-  next()
-})
 
 app.get('/users', (req, res) => res.json(users))
 
